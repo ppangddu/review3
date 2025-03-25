@@ -72,6 +72,7 @@
             <td align="center">내 용</td>
             <td><textarea name="cont" rows="10" style="width:100%"></textarea></td>
         </tr>
+        <% if (dto.getNested() == 0) { %>
         <tr>
             <td align="center">별점</td>
             <td>
@@ -85,6 +86,8 @@
                 </select>
             </td>
         </tr>
+        <% } %>
+
         <tr>
             <td colspan="2" align="center" height="30">
                 <input type="button" value="작  성" onClick="check()">&nbsp;
