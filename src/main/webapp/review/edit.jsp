@@ -1,13 +1,13 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
          pageEncoding="UTF-8"%>
 
-<jsp:useBean id="boardManager" class="pack.board.BoardManager" />
-<jsp:useBean id="dto" class="pack.board.BoardDto" />
+<jsp:useBean id="reviewManager" class="pack.review.ReviewManager" />
+<jsp:useBean id="dto" class="pack.review.ReviewDto" />
 
 <%
   String num = request.getParameter("num");
   String bpage = request.getParameter("page");
-  dto = boardManager.getData(num); // 수정 대상 자료 읽기
+  dto = reviewManager.getData(num); // 수정 대상 자료 읽기
 %>
 
 <!DOCTYPE html>
@@ -72,7 +72,7 @@
     <tr>
       <td colspan="2" style="text-align: center; height: 50">
         <input type="button" value="수정완료" onclick="check()">&nbsp;
-        <input type="button" value="목록보기" onclick="location.href='boardlist.jsp?page=<%=bpage%>'">&nbsp;
+        <input type="button" value="목록보기" onclick="location.href='reviewlist.jsp?page=<%=bpage%>'">&nbsp;
       </td>
     </tr>
   </table>

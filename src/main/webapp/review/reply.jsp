@@ -1,21 +1,20 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
          pageEncoding="UTF-8"%>
 
-<jsp:useBean id="boardManager" class="pack.board.BoardManager" />
-<jsp:useBean id="dto" class="pack.board.BoardDto" />
+<jsp:useBean id="reviewManager" class="pack.review.ReviewManager" />
+<jsp:useBean id="dto" class="pack.review.ReviewDto" />
 
 <%
     String num = request.getParameter("num");
     String bpage = request.getParameter("page");
 
-    dto = boardManager.getReplyData(num); // 해당 댓글의 원글 정보 읽기
+    dto = reviewManager.getReplyData(num); // 해당 댓글의 원글 정보 읽기
 %>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="../css/board.css">
-
     <script>
         function check(){
             if(frm.name.value==""){
@@ -36,9 +35,17 @@
             }else
                 frm.submit();
         }
-    </script>
 
-    <title>Insert title here</title>
+        function setRating(value) {
+            document.getElementById("ratingValue").value = value;
+            const stars = document.querySelectorAll(".star");
+            stars.forEach((star, idx) => {
+                star.textContent = idx < value ? '★' : '☆';
+                star.style.color = idx < value ? 'gold' : 'lightgray';
+            });
+        }
+    </script>
+    <title>댓글 쓰기</title>
 </head>
 <body>
 <form name="frm" method="post" action="replysave.jsp">
@@ -76,14 +83,44 @@
         <tr>
             <td align="center">별점</td>
             <td>
-                <select name="rating">
-                    <option value="0">선택</option>
-                    <option value="1">★☆☆☆☆</option>
-                    <option value="2">★★☆☆☆</option>
-                    <option value="3">★★★☆☆</option>
-                    <option value="4">★★★★☆</option>
-                    <option value="5">★★★★★</option>
-                </select>
+                <div id="star-rating">
+                    <input type="hidden" name="rating" id="rating" value="0">
+                    <% for (int i = 1; i <= 5; i++) { %>
+                    <span class="star" data-value="<%=i%>">☆</span>
+                    <% } %>
+                </div>
+                <style>
+                    .star {
+                        font-size: 24px;
+                        cursor: pointer;
+                        color: lightgray;
+                        transition: color 0.2s;
+                    }
+                    .star.selected {
+                        color: gold;
+                    }
+                    .star:hover {
+                        color: orange;
+                    }
+                </style>
+                <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                        const stars = document.querySelectorAll("#star-rating .star");
+                        const ratingInput = document.getElementById("rating");
+
+                        stars.forEach((star, idx) => {
+                            star.addEventListener("click", () => {
+                                const rating = idx + 1;
+                                ratingInput.value = rating;
+
+                                stars.forEach((s, i) => {
+                                    s.classList.toggle("selected", i < rating);
+                                    s.textContent = i < rating ? "★" : "☆";
+                                });
+                            });
+                        });
+                    });
+                </script>
             </td>
         </tr>
         <% } %>
@@ -92,7 +129,7 @@
             <td colspan="2" align="center" height="30">
                 <input type="button" value="작  성" onClick="check()">&nbsp;
                 <input type="button" value="목  록"
-                       onClick="location.href='boardlist.jsp?page=<%=bpage%>'">
+                       onClick="location.href='reviewlist.jsp?page=<%=bpage%>'">
             </td>
         </tr>
     </table>
