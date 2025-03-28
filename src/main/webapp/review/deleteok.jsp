@@ -1,35 +1,37 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
          pageEncoding="UTF-8"%>
 
-<jsp:useBean id="bean" class="pack.review.ReviewBean" />
-<jsp:setProperty property="*" name="bean" /> <!-- num도 같이 들어옴 -->
-<jsp:useBean id="reviewManager" class="pack.review.ReviewManager" />
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page import="pack.review.ReviewManager" %>
 
 <%
     String num = request.getParameter("num");
     String bpage = request.getParameter("page");
     String pass = request.getParameter("pass");
 
+    ReviewManager reviewManager = new ReviewManager();
+
     String adminOk = (String) session.getAttribute("adminOk");
     boolean isAdmin = "admin".equals(adminOk);
 
-    boolean b;
+    boolean isVaild = isAdmin || reviewManager.checkPassword(Integer.parseInt(num), pass);
 
-    if (isAdmin) {
-        b = true; // 관리자면 비번 체크 생략
-    } else {
-        b = reviewManager.checkPassword(Integer.parseInt(num), pass); // 일반 사용자 비번 체크
-    }
+    request.setAttribute("isValid", isVaild);
+    request.setAttribute("num", num);
+    request.setAttribute("bpage", bpage);
+%>
 
-    if (b) {
-        reviewManager.delData(num);
-        response.sendRedirect("reviewlist.jsp?page=" + bpage);
-    } else {
-%>
-<script>
-    alert("비밀번호 불일치");
-    history.back();
-</script>
-<%
-    }
-%>
+<c:choose>
+    <c:when test="${isValid}">
+        <%
+            reviewManager.delData(num);
+            response.sendRedirect("reviewlist.jsp?page=" + bpage);
+        %>
+    </c:when>
+    <c:otherwise>
+        <script>
+            alert("비밀번호 불일치");
+            history.back();
+        </script>
+    </c:otherwise>
+</c:choose>

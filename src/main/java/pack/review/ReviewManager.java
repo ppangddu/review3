@@ -373,5 +373,21 @@ public class ReviewManager {
         return 0;
     }
 
+    public double getAverageRating(int gnum) {
+        double avg = 0;
+        String sql = "select avg(rating) from review where gnum=? and nested=1 and rating > 0";
+        try (Connection conn = ds.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, gnum);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                avg = rs.getDouble(1);
+            }
+        } catch (Exception e) {
+            System.out.println("getAverageRating err : " + e);
+        }
+        return avg;
+    }
+
 
 }

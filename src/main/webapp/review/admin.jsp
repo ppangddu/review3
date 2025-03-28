@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
          pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -21,34 +22,29 @@
   <table>
     <tr>
       <td>
-        <%
-          String sessionValue = (String)session.getAttribute("adminOk"); //boardcontent에서 adminOk로 정의함
-          if (sessionValue != null) {
-        %>
-        이미 로그인된 상태입니다.
-        <a href="adminlogout.jsp">로그아웃</a>
-        <a href="javascript:window.close()">창 닫기</a>
-        <%
-        } else {
-        %>
-        <table>
-          <tr>
-            <td>아이디: <input type="text" name="id"></td>
-          </tr>
-          <tr>
-            <td>비밀번호: <input type="text" name="pwd"></td>
-          </tr>
-          <tr>
-            <td>
-              <a href="#" onclick="check()">로그인</a>
-              <a href="javascript:window.close()">창 닫기</a>
-            </td>
-          </tr>
-        </table>
-
-        <%
-          }
-        %>
+        <c:choose>
+          <c:when test="${not empty sessionScope.adminOk}">
+            이미 로그인된 상태입니다.
+            <a href="adminlogin.jsp">로그아웃</a>
+            <a href="javascript:window.close()">창 닫기</a>
+          </c:when>
+          <c:otherwise>
+            <table>
+              <tr>
+                <td>아이디: <input type="text" name="id"> </td>
+              </tr>
+              <tr>
+                <td>비밀번호: <input type="text" name="pwd"></td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="#" onclick="check()">로그인</a>
+                  <a href="javascript:window.close()">창 닫기</a>
+                </td>
+              </tr>
+            </table>
+          </c:otherwise>
+        </c:choose>
       </td>
     </tr>
   </table>
