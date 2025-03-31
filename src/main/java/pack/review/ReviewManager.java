@@ -3,10 +3,10 @@ package pack.review;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ReviewManager {
     private Connection conn;
@@ -26,6 +26,29 @@ public class ReviewManager {
             System.out.println("Driver 로딩 실패 : " + e.getMessage());
         }
     }
+    public ReviewDto getData(String num) {
+        String sql = "select * from review where num=?";
+        ReviewDto dto = null;
+        try (Connection conn = ds.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, num);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    dto = new ReviewDto();
+                    dto.setNum(rs.getInt("num"));
+                    dto.setCont(rs.getString("cont"));
+                    dto.setRating(rs.getInt("rating"));
+                    dto.setLikeCount(rs.getInt("like_count"));
+                    dto.setUserId(rs.getString("user_id"));
+                    // 필요하면 nickname도 조인해서 추가
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("getData err : " + e);
+        }
+        return dto;
+    }
+
 
     public void totalList() {
         String sql = "select count(*) from review where num=gnum";
@@ -45,310 +68,104 @@ public class ReviewManager {
         return pageTot;
     }
 
-    public ArrayList<ReviewDto> getDataAll(int page, String searchType, String searchWord) {
+    // 리뷰 목록 가져오기 - 영화 기반으로 변경 예정
+    public ArrayList<ReviewDto> getReviewsByMovieId(int movieId) {
         ArrayList<ReviewDto> list = new ArrayList<>();
-        String sql = "select * from review";
-
-        try {
-            conn = ds.getConnection();
-
-            if (searchWord == null || searchWord.trim().isEmpty()) {
-                sql += " WHERE num=gnum ORDER BY num DESC";
-                pstmt = conn.prepareStatement(sql);
-            } else {
-                sql += " WHERE num=gnum AND " + searchType + " LIKE ? ORDER BY num DESC";
-                pstmt = conn.prepareStatement(sql);
-                pstmt.setString(1, "%" + searchWord + "%");
-            }
-
-            rs = pstmt.executeQuery();
-
-            for (int i = 0; i < (page - 1) * pageList; i++) {
-                rs.next();
-            }
-
-            int k = 0;
-            while (rs.next() && k < pageList) {
-                ReviewDto dto = new ReviewDto();
-                dto.setNum(rs.getInt("num"));
-                dto.setName(rs.getString("name"));
-                dto.setTitle(rs.getString("title"));
-                dto.setBdate(rs.getString("bdate"));
-                dto.setReadcnt(rs.getInt("readcnt"));
-                dto.setNested(rs.getInt("nested"));
-                dto.setImageUrl(rs.getString("image_url"));
-                dto.setRating(rs.getInt("rating"));
-                dto.setLikeCount(rs.getInt("like_count"));
-                dto.setReleaseDate(rs.getString("release_date"));
-                list.add(dto);
-                k++;
-            }
-        } catch (Exception e) {
-            System.out.println("getDataAll err : " + e);
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (Exception e2) {
-            }
-        }
-        return list;
-    }
-
-    public int currentMaxNum() {
-        String sql = "select max(num) from review";
-        int num = 0;
-        try (Connection conn = ds.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-            if (rs.next()) num = rs.getInt(1);
-        } catch (Exception e) {
-            System.out.println("currentMaxNum err : " + e);
-        }
-        return num;
-    }
-
-    public void saveData(ReviewBean bean) {
-        String sql = "INSERT INTO review (num, name, pass, mail, title, cont, bip, bdate, readcnt, gnum, onum, nested, image_url, rating, like_count, release_date) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-
-        int num = currentMaxNum() + 1;
+        String sql = "SELECT r.*, u.nickname FROM review r JOIN user u ON r.user_id = u.id WHERE r.movie_id = ? AND r.nested = 0 ORDER BY r.num DESC";
 
         try (Connection conn = ds.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, num);
-            pstmt.setString(2, bean.getName());
-            pstmt.setString(3, bean.getPass());
-            pstmt.setString(4, bean.getMail());
-            pstmt.setString(5, bean.getTitle());
-            pstmt.setString(6, bean.getCont());
-            pstmt.setString(7, bean.getBip());
-            pstmt.setString(8, bean.getBdate());
-            pstmt.setInt(9, 0);
-            pstmt.setInt(10, num);
-            pstmt.setInt(11, 0);
-            pstmt.setInt(12, 0);
-            pstmt.setString(13, bean.getImageUrl());
-            pstmt.setInt(14, 0);
-            pstmt.setInt(15, 0);
-            pstmt.setString(16, bean.getReleaseDate());
-            pstmt.executeUpdate();
-        } catch (Exception e) {
-            System.out.println("saveData err : " + e);
-        }
-    }
-
-    public void updateReadcnt(String num) {
-        String sql = "update review set readcnt=readcnt + 1 where num=?";
-        try (Connection conn = ds.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, num);
-            pstmt.executeUpdate();
-        } catch (Exception e) {
-            System.out.println("updateReadcnt err : " + e);
-        }
-    }
-
-    public ReviewDto getData(String num) {
-        String sql = "select * from review where num=?";
-        ReviewDto dto = null;
-        try (Connection conn = ds.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, num);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    dto = new ReviewDto();
-                    dto.setNum(rs.getInt("num"));
-                    dto.setName(rs.getString("name"));
-                    dto.setPass(rs.getString("pass"));
-                    dto.setMail(rs.getString("mail"));
-                    dto.setTitle(rs.getString("title"));
-                    dto.setCont(rs.getString("cont"));
-                    dto.setBip(rs.getString("bip"));
-                    dto.setBdate(rs.getString("bdate"));
-                    dto.setReadcnt(rs.getInt("readcnt"));
-                    dto.setImageUrl(rs.getString("image_url"));
-                    dto.setRating(rs.getInt("rating"));
-                    dto.setLikeCount(rs.getInt("like_count"));
-                    dto.setReleaseDate(rs.getString("release_date"));
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("getData err : " + e);
-        }
-        return dto;
-    }
-
-    public ReviewDto getReplyData(String num) {
-        String sql = "select * from review where num=?";
-        ReviewDto dto = null;
-        try (Connection conn = ds.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, num);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    dto = new ReviewDto();
-                    dto.setTitle(rs.getString("title"));
-                    dto.setGnum(rs.getInt("gnum"));
-                    dto.setOnum(rs.getInt("onum"));
-                    dto.setNested(rs.getInt("nested"));
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("getReplyData err : " + e);
-        }
-        return dto;
-    }
-
-    public void updateOnum(int gnum, int onum) {
-        String sql = "update review set onum = onum + 1 where onum >= ? and gnum = ?";
-        try {
-            conn = ds.getConnection();
-            pstmt = conn.prepareStatement(sql);
-            pstmt.setInt(1, onum);
-            pstmt.setInt(2, gnum);
-            pstmt.executeUpdate();
-        } catch (Exception e) {
-            System.out.println("updateOnum err : " + e);
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (Exception e2) {
-            }
-        }
-    }
-
-    public void saveReplyData(ReviewBean bean) {
-        String sql = "insert into review values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-        try (Connection conn = ds.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, bean.getNum());
-            pstmt.setString(2, bean.getName());
-            pstmt.setString(3, bean.getPass());
-            pstmt.setString(4, bean.getMail());
-            pstmt.setString(5, bean.getTitle());
-            pstmt.setString(6, bean.getCont());
-            pstmt.setString(7, bean.getBip());
-            pstmt.setString(8, bean.getBdate());
-            pstmt.setInt(9, 0);
-            pstmt.setInt(10, bean.getGnum());
-            pstmt.setInt(11, bean.getOnum());
-            pstmt.setInt(12, bean.getNested());
-            pstmt.setString(13, bean.getImageUrl());
-            pstmt.setInt(14, bean.getRating());
-            pstmt.setInt(15,0);
-            pstmt.setString(16, bean.getReleaseDate());
-            pstmt.executeUpdate();
-        } catch (Exception e) {
-            System.out.println("saveReplyData err : " + e);
-        }
-    }
-
-    public boolean checkPassword(int num, String newPass) {
-        boolean b = false;
-        String sql = "select pass from review where num=?";
-        try {
-            conn = ds.getConnection();
-            pstmt = conn.prepareStatement(sql);
-            pstmt.setInt(1, num);
-            rs = pstmt.executeQuery();
-            if (rs.next()) {
-                if (newPass.equals(rs.getString("pass"))) {
-                    b = true;
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("checkPassword err : " + e);
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (Exception e2) {
-            }
-        }
-        return b;
-    }
-
-    public void saveEdit(ReviewBean bean) {
-        String sql = "update review set name=?,mail=?,title=?,cont=?, image_url=? where num=?";
-        try {
-            conn = ds.getConnection();
-            pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, bean.getName());
-            pstmt.setString(2, bean.getMail());
-            pstmt.setString(3, bean.getTitle());
-            pstmt.setString(4, bean.getCont());
-            pstmt.setString(5, bean.getImageUrl());
-            pstmt.setInt(6, bean.getNum());
-            pstmt.executeUpdate();
-        } catch (Exception e) {
-            System.out.println("saveEdit err: " + e);
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (Exception e2) {
-            }
-        }
-    }
-
-    public void delData(String num) {
-        String sql = "delete from review where gnum=?";
-        try {
-            conn = ds.getConnection();
-            pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, num);
-            pstmt.executeUpdate();
-        } catch (Exception e) {
-            System.out.println("delData err : " + e);
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (Exception e2) {
-            }
-        }
-    }
-
-    public ArrayList<ReviewDto> getComments(int originalNum) {
-        ArrayList<ReviewDto> comments = new ArrayList<>();
-        String sql = "SELECT * FROM review WHERE gnum=? AND num != ? ORDER BY onum ASC";
-        try (Connection conn = ds.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, originalNum);
-            pstmt.setInt(2, originalNum);
+            pstmt.setInt(1, movieId);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 ReviewDto dto = new ReviewDto();
                 dto.setNum(rs.getInt("num"));
-                dto.setName(rs.getString("name"));
                 dto.setCont(rs.getString("cont"));
-                dto.setBdate(rs.getString("bdate"));
-                dto.setNested(rs.getInt("nested"));
-                dto.setTitle(rs.getString("title"));
-                dto.setImageUrl(rs.getString("image_url"));
+                dto.setCdate(rs.getString("cdate"));
                 dto.setRating(rs.getInt("rating"));
                 dto.setLikeCount(rs.getInt("like_count"));
-                comments.add(dto);
+                dto.setUserId(rs.getString("user_id"));
+                dto.setNickname(rs.getString("nickname"));
+                dto.setGnum(rs.getInt("gnum"));
+                dto.setOnum(rs.getInt("onum"));
+                dto.setNested(rs.getInt("nested"));
+                list.add(dto);
+            }
+            rs.close();
+        } catch (Exception e) {
+            System.out.println("getReviewsByMovieId err : " + e);
+        }
+
+        return list;
+    }
+
+    // 대댓글 포함 전체 댓글 가져오기
+    public ArrayList<ReviewDto> getComments(int gnum) {
+        ArrayList<ReviewDto> all = new ArrayList<>();
+        ArrayList<List<ReviewDto>> grouped = new ArrayList<>();
+
+        String sql = "SELECT r.*, u.nickname FROM review r JOIN user u ON r.user_id = u.id WHERE r.gnum=? ORDER BY r.onum ASC";
+        try (Connection conn = ds.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, gnum);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                ReviewDto dto = new ReviewDto();
+                dto.setNum(rs.getInt("num"));
+                dto.setCont(rs.getString("cont"));
+                dto.setCdate(rs.getString("cdate"));
+                dto.setNested(rs.getInt("nested"));
+                dto.setRating(rs.getInt("rating"));
+                dto.setLikeCount(rs.getInt("like_count"));
+                dto.setOnum(rs.getInt("onum"));
+                dto.setUserId(rs.getString("user_id"));
+                dto.setNickname(rs.getString("nickname"));
+                all.add(dto);
             }
             rs.close();
         } catch (Exception e) {
             System.out.println("getComments err : " + e);
         }
-        return comments;
-    }
 
-    public int getTotalRecordCount() {
-        return recTot;
+        for (int i = 0; i < all.size(); i++) {
+            ReviewDto dto = all.get(i);
+            if (dto.getNested() == 1) {
+                List<ReviewDto> group = new ArrayList<>();
+                group.add(dto);
+                for (int j = i + 1; j < all.size(); j++) {
+                    ReviewDto next = all.get(j);
+                    if (next.getNested() == 1) break;
+                    group.add(next);
+                }
+                List<ReviewDto> replies = group.stream()
+                        .filter(r -> r.getNested() > 1)
+                        .sorted((r1, r2) -> {
+                            int nestedCmp = Integer.compare(r1.getNested(), r2.getNested());
+                            if (nestedCmp == 0) return Integer.compare(r2.getLikeCount(), r1.getLikeCount());
+                            return nestedCmp;
+                        })
+                        .collect(Collectors.toList());
+
+                List<ReviewDto> combined = new ArrayList<>();
+                combined.add(group.get(0));
+                combined.addAll(replies);
+                grouped.add(combined);
+            }
+        }
+
+        grouped.sort((g1, g2) -> Integer.compare(g2.get(0).getLikeCount(), g1.get(0).getLikeCount()));
+
+        ArrayList<ReviewDto> result = new ArrayList<>();
+        for (List<ReviewDto> group : grouped) {
+            result.addAll(group);
+        }
+
+        return result;
     }
 
     public void increaseLikeCount(int num) {
-        String sql = "update review set like_count = like_count + 1 where num=?";
+        String sql = "UPDATE review SET like_count = like_count + 1 WHERE num=?";
         try (Connection conn = ds.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, num);
@@ -358,27 +175,12 @@ public class ReviewManager {
         }
     }
 
-    public int getLikeCount(int num) {
-        String sql = "SELECT like_count FROM review WHERE num=?";
-        try (Connection conn = ds.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, num);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("like_count");
-            }
-        } catch (Exception e) {
-            System.out.println("getLikeCount err : " + e);
-        }
-        return 0;
-    }
-
-    public double getAverageRating(int gnum) {
+    public double getAverageRating(int movieId) {
         double avg = 0;
-        String sql = "select avg(rating) from review where gnum=? and nested=1 and rating > 0";
+        String sql = "SELECT avg(rating) FROM review WHERE movie_id = ? AND nested = 1 AND rating > 0";
         try (Connection conn = ds.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, gnum);
+            pstmt.setInt(1, movieId);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 avg = rs.getDouble(1);
@@ -388,6 +190,4 @@ public class ReviewManager {
         }
         return avg;
     }
-
-
 }

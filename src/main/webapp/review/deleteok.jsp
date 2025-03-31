@@ -25,7 +25,7 @@
     <c:when test="${isValid}">
         <%
             reviewManager.delData(num);
-            response.sendRedirect("reviewlist.jsp?page=" + bpage);
+            response.sendRedirect("movielist.jsp?page=" + bpage);
         %>
     </c:when>
     <c:otherwise>

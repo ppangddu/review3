@@ -17,7 +17,6 @@
   String bpage = request.getParameter("page");
 
   ReviewManager reviewManager = new ReviewManager();
-  reviewManager.updateReadcnt(num);
   ReviewDto dto = reviewManager.getData(num);
 
   request.setAttribute("dto", dto);
@@ -54,14 +53,13 @@
         </a>
       </c:if>
 
-      <a href="reviewlist.jsp?num=${dto.num}&page=${bpage}">
+      <a href="movielist.jsp?num=${dto.num}&page=${bpage}">
         <img src="../images/list.gif">
       </a>
     </td>
   </tr>
   <tr style="height: 30">
     <td>개봉일: ${dto.releaseDate}</td>
-    <td>조회수: ${dto.readcnt}</td>
   </tr>
   <tr>
     <td colspan="3" style="background-color: cyan">제목 : ${dto.title}</td>
@@ -111,7 +109,7 @@
             </c:if>
 
             <div>
-              <b>${comment.name}</b> : ${comment.cont}
+              <b>${comment.nickname}</b> : ${comment.cont}
             </div>
 
             <div style="font-size: 0.9em; color: gray; margin-top: 3px;">

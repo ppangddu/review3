@@ -54,7 +54,7 @@
 
   <br><br>
   <input type="button" onclick="check()" value="삭제확인">
-  <input type="button" value="목록보기" onclick="location.href='reviewlist.jsp?page=<%=bpage %>'">
+  <input type="button" value="목록보기" onclick="location.href='movielist.jsp?page=<%=bpage %>'">
 </form>
 </body>
 </html>
