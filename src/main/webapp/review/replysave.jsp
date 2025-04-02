@@ -34,7 +34,7 @@
   bean.setUserId(userId);
 
   //비속어 필터링
-  String[] badWords = {"프", "로", "젝", "트"};
+  String[] badWords = {"ㅅㅂ", "tq"};
   boolean hasBadWord = false;
 
   for(String word : badWords){
@@ -69,12 +69,15 @@
 
   //쿠키 삭제
   CookieManager cm = CookieManager.getInstance();
-  String[] cookieNames = {"cont", "rating"};
-  for (String cname : cookieNames) {
-    Cookie delete = cm.deleteCookie(cname);
-    response.addCookie(delete);
-    System.out.println("쿠키 삭제됨: " + cname);
-  }
+  boolean isReply = (request.getParameter("num") != null); // 댓글이면 true
+
+  String contName = isReply ? "cont_reply" : "cont_review";
+  String ratingName = isReply ? "rating_reply" : "rating_review";
+
+  response.addCookie(cm.deleteCookie(contName));
+  response.addCookie(cm.deleteCookie(ratingName));
+
+  System.out.println("쿠키 삭제됨: " + contName + ", " + ratingName);
 
   // 원글로 리다이렉트
   response.sendRedirect("reviewcontent.jsp?movieId=" + movieId + "&page=" + bpage);

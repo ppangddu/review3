@@ -18,11 +18,11 @@
   ReviewManager reviewManager = new ReviewManager();
 
   MovieDto movie = reviewManager.getMovieById(movieId);
-  ArrayList<ReviewDto> comments = reviewManager.getCommentsByMovieId(movieId);
+  ArrayList<ReviewDto> reviews = reviewManager.getReviewsByMovieId(movieId);
   double avgRating = reviewManager.getAverageRating(movieId);
 
   request.setAttribute("movie", movie);
-  request.setAttribute("comments", comments);
+  request.setAttribute("reviews", reviews);
   request.setAttribute("avgRating", avgRating);
   request.setAttribute("bpage", bpage);
 %>
@@ -166,12 +166,14 @@
 <div class="movie-detail-container">
   <div class="movie-header">
     <a href="reply.jsp?movieId=${movie.id}&page=${bpage}">리뷰 쓰기</a>
-    <a href="edit.jsp?id=${movie.id}&page=${bpage}">수정하기</a>
+<c:if test="${not empty sessionScope.admin}">
+<a href="edit.jsp?id=${movie.id}&page=${bpage}">수정하기</a>
     <a href="delete.jsp?id=${movie.id}&page=${bpage}">삭제하기</a>
+</c:if>
     <a href="movielist.jsp?page=${bpage}">목록 보기</a>
   </div>
 
-  <div class="movie-title">제목 : ${movie.title}</div>
+  <div class="movie-title">${movie.title}</div>
 
   <div class="movie-info-wrapper">
     <div class="movie-info">
@@ -195,27 +197,27 @@
 
   <div class="comment-box">
     <h3>댓글 목록</h3>
-    <c:forEach var="comment" items="${comments}">
-      <c:set var="indent" value="${comment.nested * 20}" />
+    <c:forEach var="review" items="${reviews}">
+      <c:set var="indent" value="${review.nested * 20}" />
       <div class="comment" style="margin-left:${indent}px;">
-        <c:if test="${comment.nested == 1 && comment.rating > 0}">
+        <c:if test="${review.nested == 1 && review.rating > 0}">
           <div class="stars">
             <c:forEach var="i" begin="1" end="5">
               <c:choose>
-                <c:when test="${i <= comment.rating}">★</c:when>
+                <c:when test="${i <= review.rating}">★</c:when>
                 <c:otherwise>☆</c:otherwise>
               </c:choose>
             </c:forEach>
           </div>
         </c:if>
 
-        <div><b>${comment.nickname}</b> : ${comment.cont}</div>
+        <div><b>${review.nickname}</b> : ${review.cont}</div>
         <div class="meta">
-          (<fmt:formatDate value="${comment.cdate}" pattern="yyyy-MM-dd HH:mm" />)
-          <button class="likeBtn" data-num="${comment.num}">
-            ❤️ <span id="like-${comment.num}">${comment.likeCount}</span>
+          (<fmt:formatDate value="${review.cdate}" pattern="yyyy-MM-dd HH:mm" />)
+          <button class="likeBtn" data-num="${review.num}">
+            ❤️ <span id="like-${review.num}">${review.likeCount}</span>
           </button>
-          <a href="reply.jsp?num=${comment.num}&page=${bpage}">답글</a>
+          <a href="reply.jsp?num=${review.num}&page=${bpage}">답글</a>
         </div>
       </div>
     </c:forEach>

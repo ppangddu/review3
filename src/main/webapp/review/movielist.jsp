@@ -139,8 +139,10 @@
 <div class="nav">
     [ <a href="../index.html">메인으로</a> ]
     [ <a href="movielist.jsp?page=1">최근목록</a> ]
-    [ <a href="moviewrite.jsp">새글작성</a> ]
-    [ <a href="#" onclick="window.open('admin.jsp','','width=500,height=300,top=200,left=300')">관리자용</a> ]
+    <c:if test="${not empty sessionScope.admin}">
+        [ <a href="moviewrite.jsp">새글작성</a> ]
+    </c:if>
+    [ <a href="#" onclick="window.open('admin.jsp','','width=500,height=300,top=200,left=300')">로그인</a> ]
 </div>
 
 <div class="search-form">
