@@ -9,9 +9,9 @@
   <script>
     function check(){
       if(frm.title.value.trim() ==""){
-        alert("영화 제목을 입력하세요");
+        alert("제목을 입력하세요");
         frm.title.focus();
-      }else if(frm.actorName.value.trim() =="") {
+      }else if(frm.directorName.value.trim() =="") {
         alert("감독을 입력하세요");
       } else if(frm.releaseDate.value.trim() =="") {
         alert("개봉일을 입력하세요");
@@ -27,7 +27,7 @@
   </script>
 </head>
 <body>
-<form name="frm" method="post" action="moviesave.jsp">
+<form name="frm" method="post" action="reviewsave.jsp">
   <!-- 관리자 이름 자동 설정 -->
   <input type="hidden" name="pass" value="adminpass">
   <input type="hidden" name="mail" value="admin@site.com">
@@ -41,8 +41,8 @@
       <td><input name="title" size="50"></td>
     </tr>
     <tr>
-      <td align="center">출연</td>
-      <td><input name="actorName" size="50"></td>
+      <td align="center">감독</td>
+      <td><input name="directorName" size="50"></td>
     </tr>
     <tr>
       <td align="center">개봉일</td>
@@ -50,7 +50,7 @@
     </tr>
     <tr>
       <td align="center">내 용</td>
-      <td><textarea name="description" cols="50" rows="10"></textarea></td>
+      <td><textarea name="cont" cols="50" rows="10"></textarea></td>
     </tr>
     <tr>
       <td align="center">이미지url</td>
@@ -62,7 +62,7 @@
                value="메  인" onClick="location.href='../index.html'">&nbsp;
         <input type="button" value="작  성" onClick="check()">&nbsp;
         <input type="button" value="목  록"
-               onClick="location.href='movielist.jsp'"></td>
+               onClick="location.href='reviewlist.jsp'"></td>
     </tr>
   </table>
 </form>

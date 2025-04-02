@@ -4,29 +4,25 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>영화등록</title>
+  <title>게시판</title>
   <link rel="stylesheet" type="text/css" href="../css/board.css">
   <script>
     function check(){
-      const frm = document.forms["frm"];
       if(frm.title.value.trim() ==""){
         alert("영화 제목을 입력하세요");
         frm.title.focus();
       }else if(frm.genre.value.trim() =="") {
         alert("장르를 입력하세요");
-        frm.genre.focus();
       }else if(frm.actorName.value.trim() =="") {
-        alert("출연란을 입력하세요");
-        frm.actorName.focus();
+        alert("출연을 입력하세요");
       } else if(frm.releaseDate.value.trim() =="") {
         alert("개봉일을 입력하세요");
-        frm.releaseDate.focus();
       } else if(frm.description.value.trim() ==""){
         alert("내용을 입력하세요");
-        frm.description.focus();
+        frm.cont.focus();
       }else if(frm.imageUrl.value.trim() ==""){
-        alert("이미지url를 입력하세요");
-        frm.imageUrl.focus();
+        alert("내용을 입력하세요");
+        frm.cont.focus();
       } else
         frm.submit();
     }
@@ -40,7 +36,7 @@
 
   <table border="1">
     <tr>
-      <td colspan="2"><h2>*** 글쓰기 ***</h2></td>
+      <td colspan="2"><h2>영화 추가하기</h2></td>
     </tr>
     <tr>
       <td align="center">영화제목</td>

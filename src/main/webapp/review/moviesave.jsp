@@ -1,21 +1,24 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+         pageEncoding="UTF-8"%>
 <%@ page import="pack.movie.MovieBean" %>
 <%@ page import="pack.movie.MovieManager" %>
 
-<%
-    request.setCharacterEncoding("UTF-8");
+<% request.setCharacterEncoding("utf-8");
 
     MovieBean bean = new MovieBean();
-    MovieManager manager = new MovieManager();
+    MovieManager movieManager = new MovieManager();
 
     bean.setTitle(request.getParameter("title"));
     bean.setGenre(request.getParameter("genre"));
-    bean.setActorName(request.getParameter("actorName"));  // 출연
+    bean.setActorName(request.getParameter("actorName"));
     bean.setDescription(request.getParameter("description"));
     bean.setReleaseDate(request.getParameter("releaseDate"));
     bean.setImageUrl(request.getParameter("imageUrl"));
 
-    manager.saveMovie(bean);
+    // DB 저장
+    movieManager.saveMovie(bean);
 
-    response.sendRedirect("movielist.jsp");
+    // 영화 목록으로 이동
+    response.sendRedirect("movielist.jsp?page=1");
 %>
+

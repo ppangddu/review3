@@ -37,7 +37,7 @@
             <a href="reply.jsp?num=${dto.num}&page=${bpage}"><img src="../images/reply.gif"></a>
             <a href="edit.jsp?num=${dto.num}&page=${bpage}"><img src="../images/edit.gif"></a>
             <a href="delete.jsp?num=${dto.num}&page=${bpage}"><img src="../images/del.gif"></a>
-            <a href="movielist.jsp?num=${dto.num}&page=${bpage}"><img src="../images/list.gif"></a>
+            <a href="reviewlist.jsp?num=${dto.num}&page=${bpage}"><img src="../images/list.gif"></a>
         </td>
     </tr>
     <tr style="height: 30">
