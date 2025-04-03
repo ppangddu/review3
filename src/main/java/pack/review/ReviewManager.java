@@ -18,10 +18,6 @@ public class ReviewManager {
     private ResultSet rs;
     private DataSource ds;
 
-    private int recTot;
-    private int pageList = 10;
-    private int pageTot;
-
     public ReviewManager() {
         try {
             Context context = new InitialContext();
@@ -44,36 +40,6 @@ public class ReviewManager {
         }
         return num;
     }
-
-    public ReviewDto getData(String num) {
-        ReviewDto dto = null;
-        String sql = "SELECT * FROM review WHERE num=?";
-        try (Connection conn = ds.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, num);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    dto = new ReviewDto();
-                    dto.setNum(rs.getInt("num"));
-                    dto.setMovieId(rs.getInt("movie_id"));
-                    dto.setUserId(rs.getString("user_id"));
-                    dto.setCdate(rs.getTimestamp("cdate"));
-                    dto.setGnum(rs.getInt("gnum"));
-                    dto.setOnum(rs.getInt("onum"));
-                    dto.setNested(rs.getInt("nested"));
-                    dto.setRating(rs.getInt("rating"));
-                    dto.setLikeCount(rs.getInt("like_count"));
-                    dto.setCont(rs.getString("cont"));
-                    // 필요하다면 nickname도 세팅
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("getData err: " + e);
-        }
-        return dto;
-    }
-
 
     public ReviewDto getReplyData(int num) {
         String sql = "SELECT movie_id, gnum, onum, nested FROM review WHERE num=?";
@@ -140,38 +106,6 @@ public class ReviewManager {
         } catch (Exception e) {
             System.out.println("saveReplyData err : " + e);
         }
-    }
-
-
-    public boolean checkPassword(int num, String newPass) {
-        boolean b = false;
-        String sql = "select pass from review where num=?";
-        try {
-            conn = ds.getConnection();
-            pstmt = conn.prepareStatement(sql);
-            pstmt.setInt(1, num);
-            rs = pstmt.executeQuery();
-            if (rs.next()) {
-                if (newPass.equals(rs.getString("pass"))) {
-                    b = true;
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("checkPassword err : " + e);
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (Exception e2) {
-            }
-        }
-        return b;
-    }
-
-
-    public int getTotalRecordCount() {
-        return recTot;
     }
 
     public void increaseLikeCount(int num) {
@@ -247,7 +181,7 @@ public class ReviewManager {
 
         String sql = "SELECT r.*, u.nickname " +
                 "FROM review r JOIN user u ON r.user_id = u.id " +
-                "WHERE r.movie_id=? ORDER BY r.gnum, r.onum";
+                "WHERE r.movie_id=? ORDER BY r.cdate asc";
 
         try (Connection conn = ds.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -301,4 +235,15 @@ public class ReviewManager {
 
         return result;
     }
+    public void decreaseLikeCount(int num) {
+        String sql = "UPDATE review SET like_count = like_count - 1 WHERE num=? AND like_count > 0";
+        try (Connection conn = ds.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, num);
+            pstmt.executeUpdate();
+        } catch (Exception e) {
+            System.out.println("decreaseLikeCount err : " + e);
+        }
+    }
+
 }

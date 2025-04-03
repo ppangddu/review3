@@ -21,6 +21,11 @@
   ArrayList<ReviewDto> reviews = reviewManager.getReviewsByMovieId(movieId);
   double avgRating = reviewManager.getAverageRating(movieId);
 
+  if (session.getAttribute("user_id") == null) {
+    session.setAttribute("user_id", "testuser");
+    session.setAttribute("nickname", "haruka");
+  }
+
   request.setAttribute("movie", movie);
   request.setAttribute("reviews", reviews);
   request.setAttribute("avgRating", avgRating);
@@ -165,7 +170,10 @@
 <body>
 <div class="movie-detail-container">
   <div class="movie-header">
-    <a href="reply.jsp?movieId=${movie.id}&page=${bpage}">리뷰 쓰기</a>
+    <a href="reply.jsp?movieId=${movie.id}&page=${bpage}"
+       class="login-check" data-url="reply.jsp?movieId=${movie.id}&page=${bpage}">
+      리뷰 쓰기
+    </a>
 <c:if test="${not empty sessionScope.admin}">
 <a href="edit.jsp?id=${movie.id}&page=${bpage}">수정하기</a>
     <a href="delete.jsp?id=${movie.id}&page=${bpage}">삭제하기</a>
@@ -217,36 +225,73 @@
           <button class="likeBtn" data-num="${review.num}">
             ❤️ <span id="like-${review.num}">${review.likeCount}</span>
           </button>
-          <a href="reply.jsp?num=${review.num}&page=${bpage}">답글</a>
+          <a href="reply.jsp?num=${review.num}&page=${bpage}"
+             class="login-check" data-url="reply.jsp?num=${review.num}&page=${bpage}">
+            답글
+          </a>
         </div>
       </div>
     </c:forEach>
   </div>
 </div>
 
+
 <script>
-  const contextPath = "<%=request.getContextPath()%>";
+  const contextPath = "<%= request.getContextPath() %>";
+  const isLoggedIn = <%= session.getAttribute("user_id") != null %>;
 
-  document.addEventListener("DOMContentLoaded", function() {
-    const likeButtons = document.querySelectorAll(".likeBtn");
-
-    likeButtons.forEach(button => {
-      button.addEventListener("click", function() {
+  document.addEventListener("DOMContentLoaded", function () {
+    // 좋아요 토글
+    document.querySelectorAll(".likeBtn").forEach(button => {
+      button.addEventListener("click", function () {
         const num = this.getAttribute("data-num");
         const url = contextPath + "/review/ajax/like.jsp?num=" + num;
+        const countSpan = document.getElementById("like-" + num);
+        const btn = this;
 
         fetch(url)
                 .then(response => response.text())
                 .then(result => {
-                  const countSpan = document.getElementById("like-" + num);
-                  const newCount = parseInt(result.trim());
-                  if (!isNaN(newCount)) {
-                    countSpan.textContent = newCount;
+                  const trimmed = result.trim();
+
+                  if (trimmed === "unauthorized") {
+                    alert("로그인 후 이용 가능합니다.");
+                    return;
+                  }
+
+                  if (trimmed.startsWith("liked:")) {
+                    const count = trimmed.split(":")[1];
+                    countSpan.textContent = count;
+                    btn.classList.add("liked");
+                    btn.title = "좋아요 취소";
+                    return;
+                  }
+
+                  if (trimmed.startsWith("unliked:")) {
+                    const count = trimmed.split(":")[1];
+                    countSpan.textContent = count;
+                    btn.classList.remove("liked");
+                    btn.title = "좋아요";
+                    return;
                   }
                 });
       });
     });
+
+    // 리뷰쓰기/답글 링크 클릭 시 로그인 확인
+    document.querySelectorAll(".login-check").forEach(link => {
+      link.addEventListener("click", function (e) {
+        if (!isLoggedIn) {
+          e.preventDefault();
+          alert("로그인 후 이용 가능합니다.");
+        } else {
+          location.href = this.getAttribute("data-url");
+        }
+      });
+    });
   });
 </script>
+
+
 </body>
 </html>

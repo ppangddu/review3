@@ -38,8 +38,10 @@
     request.setAttribute("review", review);
     request.setAttribute("bpage", bpage);
 
-    session.setAttribute("user_id", "testuser");
-    session.setAttribute("nickname", "haruka");
+    if (session.getAttribute("user_id") == null) {
+        session.setAttribute("user_id", "testuser");
+        session.setAttribute("nickname", "haruka");
+    }
 
     CookieManager cm = CookieManager.getInstance();
     Cookie[] cookies = request.getCookies();
