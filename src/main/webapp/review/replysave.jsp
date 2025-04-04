@@ -13,16 +13,14 @@
   ReviewManager reviewManager = new ReviewManager();
 
   // 기존 데이터 계산
-  int gnum = Integer.parseInt(request.getParameter("gnum"));
   int onum = Integer.parseInt(request.getParameter("onum")) + 1;
   int nested = Integer.parseInt(request.getParameter("nested")) + 1;
   int movieId = Integer.parseInt(request.getParameter("movieId"));
 
-  reviewManager.updateOnum(gnum, onum); // 같은 그룹에서 onum 밀기
+  reviewManager.updateOnum(onum); // 같은 그룹에서 onum 밀기
 
   // 새 댓글 설정
   bean.setMovieId(movieId);
-  bean.setGnum(gnum);
   bean.setOnum(onum);
   bean.setNested(nested);
   bean.setNum(reviewManager.currentMaxNum() + 1);

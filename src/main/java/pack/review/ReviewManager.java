@@ -39,7 +39,7 @@ public class ReviewManager {
     }
 
     public ReviewDto getReplyData(int num) {
-        String sql = "SELECT movie_id, gnum, onum, nested FROM review WHERE num=?";
+        String sql = "SELECT movie_id, onum, nested FROM review WHERE num=?";
         ReviewDto dto = null;
 
         try (Connection conn = ds.getConnection();
@@ -50,7 +50,6 @@ public class ReviewManager {
                 if (rs.next()) {
                     dto = new ReviewDto();
                     dto.setMovieId(rs.getInt("movie_id"));
-                    dto.setGnum(rs.getInt("gnum"));
                     dto.setOnum(rs.getInt("onum"));
                     dto.setNested(rs.getInt("nested"));
                 }
@@ -62,13 +61,12 @@ public class ReviewManager {
         return dto;
     }
 
-    public void updateOnum(int gnum, int onum) {
-        String sql = "update review set onum = onum + 1 where onum >= ? and gnum = ?";
+    public void updateOnum(int onum) {
+        String sql = "update review set onum = onum + 1 where onum >= ?";
         try {
             conn = ds.getConnection();
             pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, onum);
-            pstmt.setInt(2, gnum);
             pstmt.executeUpdate();
         } catch (Exception e) {
             System.out.println("updateOnum err : " + e);
@@ -83,19 +81,18 @@ public class ReviewManager {
     }
 
     public void saveReplyData(ReviewBean bean) {
-        String sql = "INSERT INTO review (movie_id, user_id, cdate, gnum, onum, nested, rating, like_count, cont) "
-                + "VALUES (?, ?, now(), ?, ?, ?, ?, 0, ?)";
+        String sql = "INSERT INTO review (movie_id, user_id, cdate, onum, nested, rating, like_count, cont) "
+                + "VALUES (?, ?, now(), ?, ?, ?, 0, ?)";
 
         try (Connection conn = ds.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, bean.getMovieId());
             pstmt.setString(2, bean.getUserId());
-            pstmt.setInt(3, bean.getGnum());
-            pstmt.setInt(4, bean.getOnum());
-            pstmt.setInt(5, bean.getNested());
-            pstmt.setInt(6, bean.getRating());
-            pstmt.setString(7, bean.getCont());
+            pstmt.setInt(3, bean.getOnum());
+            pstmt.setInt(4, bean.getNested());
+            pstmt.setInt(5, bean.getRating());
+            pstmt.setString(6, bean.getCont());
 
             pstmt.executeUpdate();
         } catch (Exception e) {
@@ -171,11 +168,9 @@ public class ReviewManager {
 
     public ArrayList<ReviewDto> getReviewsByMovieId(int movieId) {
         ArrayList<ReviewDto> all = new ArrayList<>();
-        Map<Integer, List<ReviewDto>> groupMap = new LinkedHashMap<>();
-
         String sql = "SELECT r.*, u.nickname " +
                 "FROM review r JOIN user u ON r.user_id = u.id " +
-                "WHERE r.movie_id=? ORDER BY r.gnum ASC, r.onum ASC";
+                "WHERE r.movie_id=? ORDER BY r.onum ASC";
 
         try (Connection conn = ds.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -192,7 +187,6 @@ public class ReviewManager {
                 dto.setRating(rs.getInt("rating"));
                 dto.setLikeCount(rs.getInt("like_count"));
                 dto.setOnum(rs.getInt("onum"));
-                dto.setGnum(rs.getInt("gnum"));
                 dto.setUserId(rs.getString("user_id"));
                 dto.setNickname(rs.getString("nickname"));
                 all.add(dto);
@@ -203,12 +197,21 @@ public class ReviewManager {
             System.out.println("getCommentsByMovieId err : " + e);
         }
 
+        // 그룹핑: nested == 1 기준으로 묶기
+        List<List<ReviewDto>> grouped = new ArrayList<>();
+        List<ReviewDto> currentGroup = null;
+
         for (ReviewDto dto : all) {
-            groupMap.computeIfAbsent(dto.getGnum(), k -> new ArrayList<>()).add(dto);
+            if (dto.getNested() == 1) {
+                currentGroup = new ArrayList<>();
+                grouped.add(currentGroup);
+            }
+            if (currentGroup != null) {
+                currentGroup.add(dto);
+            }
         }
 
-        List<List<ReviewDto>> grouped = new ArrayList<>(groupMap.values());
-
+        // 좋아요 순 → 최신순 정렬
         grouped.sort((g1, g2) -> {
             int likeCompare = Integer.compare(g2.get(0).getLikeCount(), g1.get(0).getLikeCount());
             if (likeCompare == 0) {

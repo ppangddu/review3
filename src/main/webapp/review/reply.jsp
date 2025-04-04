@@ -28,7 +28,6 @@
         review = new ReviewDto();
         review.setMovieId(movieId);
         review.setNested(0);
-        review.setGnum(0);
         review.setOnum(0);
     } else {
         response.sendRedirect("movielist.jsp");
@@ -144,7 +143,6 @@
         <input type="hidden" name="num" value="${param.num}">
     </c:if>
     <input type="hidden" name="page" value="${bpage}">
-    <input type="hidden" name="gnum" value="${review.gnum}">
     <input type="hidden" name="onum" value="${review.onum}">
     <input type="hidden" name="nested" value="${review.nested}">
     <input type="hidden" name="user_id" value="${sessionScope.user_id}">
