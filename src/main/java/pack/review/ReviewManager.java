@@ -169,7 +169,7 @@ public class ReviewManager {
     public ArrayList<ReviewDto> getReviewsByMovieId(int movieId) {
         ArrayList<ReviewDto> all = new ArrayList<>();
         String sql = "SELECT r.*, u.nickname " +
-                "FROM review r JOIN user u ON r.user_id = u.id " +
+                "FROM review r JOIN member u ON r.user_id = u.id " +
                 "WHERE r.movie_id=? ORDER BY r.onum ASC";
 
         try (Connection conn = ds.getConnection();

@@ -38,9 +38,10 @@
     request.setAttribute("bpage", bpage);
 
     if (session.getAttribute("user_id") == null) {
-        session.setAttribute("user_id", "testuser");
-        session.setAttribute("nickname", "haruka");
+        session.setAttribute("user_id", "testuser");  //
+        session.setAttribute("nickname", "빠른강아지59"); // 또는 원하는 닉네임
     }
+
 
     CookieManager cm = CookieManager.getInstance();
     Cookie[] cookies = request.getCookies();
