@@ -6,7 +6,7 @@
     // MariaDB 연결 정보
     String dbUrl = "jdbc:mariadb://localhost:3306/cinemap"; // DB URL
     String dbUser = "root"; // DB 사용자 이름
-    String dbPassword = "123"; // DB 비밀번호
+    String dbPassword = "1234"; // DB 비밀번호
 
     ArrayList<String> titles = new ArrayList<>();
 
