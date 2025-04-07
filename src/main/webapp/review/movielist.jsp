@@ -1,7 +1,6 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-         pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="pack.movie.MovieDto" %>
-<%@ page import="pack.movie.MovieManager" %>
+<%@ page import="pack.movie.MovieDao" %>
 <%@ page import="java.util.List" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%
@@ -10,28 +9,26 @@
     response.setDateHeader("Expires", 0);
 
     int bpage = 1;
+    int pageList = 5;
     try {
         bpage = Integer.parseInt(request.getParameter("page"));
     } catch(Exception e) {
         bpage = 1;
     }
-    if(bpage <= 0) bpage = 1;
+    if (bpage <= 0) bpage = 1;
 
     String searchWord = request.getParameter("searchWord");
+    if (searchWord == null) searchWord = "";
 
-    MovieManager movieManager = new MovieManager();
-    int totalRecord;
-    if (searchWord != null && !searchWord.trim().isEmpty()) {
-        totalRecord = movieManager.getSearchCount(searchWord);
-    } else {
-        movieManager.totalList();
-        totalRecord = movieManager.getTotalRecordCount();
-    }
+    MovieDao dao = new MovieDao();
 
-    int pageList = 5;
+    int totalRecord = dao.getMovieCount(searchWord);
     int pageSu = totalRecord / pageList + (totalRecord % pageList > 0 ? 1 : 0);
+    if (pageSu == 0) pageSu = 1;
 
-    List<MovieDto> list = movieManager.getDataAll(bpage, searchWord);
+    int start = (bpage - 1) * pageList;
+
+    List<MovieDto> list = dao.getPagedMovies(start, pageList, searchWord);
 
     request.setAttribute("list", list);
     request.setAttribute("bpage", bpage);
@@ -39,6 +36,7 @@
     request.setAttribute("totalRecord", totalRecord);
     request.setAttribute("searchWord", searchWord);
 %>
+
 <!DOCTYPE html>
 <html>
 <head>

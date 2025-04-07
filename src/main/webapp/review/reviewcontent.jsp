@@ -1,7 +1,9 @@
+<%@page import="java.util.List"%>
 <%@ page import="pack.review.ReviewDto" %>
 <%@ page import="java.util.ArrayList" %>
-<%@ page import="pack.review.ReviewManager" %>
+<%@ page import="pack.review.ReviewDao" %>
 <%@ page import="pack.movie.MovieDto" %>
+<%@ page import="pack.movie.MovieDao" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
          pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
@@ -15,11 +17,12 @@
   int movieId = Integer.parseInt(request.getParameter("movieId"));
   String bpage = request.getParameter("page");
 
-  ReviewManager reviewManager = new ReviewManager();
+  MovieDao movieDao = new MovieDao();
+  ReviewDao reviewDao = new ReviewDao();
 
-  MovieDto movie = reviewManager.getMovieById(movieId);
-  ArrayList<ReviewDto> reviews = reviewManager.getReviewsByMovieId(movieId);
-  double avgRating = reviewManager.getAverageRating(movieId);
+  MovieDto movie = movieDao.getMovieById(movieId);
+  List<ReviewDto> reviews = reviewDao.getReviewsByMovieId(movieId);
+  double avgRating = reviewDao.getAverageRating(movieId);
 
   if (session.getAttribute("user_id") == null) {
     session.setAttribute("user_id", "testuser");
@@ -225,10 +228,16 @@
           <button class="likeBtn" data-num="${review.num}">
             ❤️ <span id="like-${review.num}">${review.likeCount}</span>
           </button>
-          <a href="reply.jsp?num=${review.num}&page=${bpage}"
-             class="login-check" data-url="reply.jsp?num=${review.num}&page=${bpage}">
-            답글
-          </a>
+          <c:if test="${review.nested == 1}">
+            <a href="reply.jsp?num=${review.num}&page=${bpage}"
+               class="login-check"
+               data-url="reply.jsp?num=${review.num}&page=${bpage}">
+              답글
+            </a>
+          </c:if>
+          <c:if test="${sessionScope.user_id == review.userId}">
+            <a href="reviewdelete.jsp?num=${review.num}&movieId=${movie.id}&page=${bpage}">삭제</a>
+          </c:if>
         </div>
       </div>
     </c:forEach>

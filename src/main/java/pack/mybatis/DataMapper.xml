@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dev">
+<!-- SELECT의 결과를 DataDto 타입으로 담아 List 컬렉션 저장 후 반환 -->
+ <select id="selectDataAll" resultType="dto">
+  SELECT * FROM membertab
+ </select>
+ <!-- sql문을 리팩토링 가능하다 -->
+ <sql id="mycol">id,name,passwd,regdate</sql>
+ <sql id="mymem">FROM membertab WHERE id=#{id}</sql>
+ <select id="selectDataPart" parameterType="string" resultType="dto">
+ SELECT
+ <include refid="mycol"/>
+ <include refid="mymem"/>
+ </select>
+ <insert id="insertData" parameterType="fbean">
+ 	INSERT INTO membertab 
+ 	VALUES(#{id},#{name},#{passwd},now())
+ </insert>
+ <update id="updateData" parameterType="fbean">
+ 	UPDATE membertab SET name=#{name}
+ 	WHERE id=#{id}
+ </update>
+ <delete id="deleteData" parameterType="String">
+ 	DELETE <include refid="mymem"/>
+ </delete>
+</mapper>

@@ -1,6 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="pack.review.ReviewManager" %>
 <%@ page import="pack.review.ReviewDto" %>
+<%@ page import="pack.review.ReviewDao" %>
 <%@ page import="pack.cookie.CookieManager" %>
 <%@ page import="jakarta.servlet.http.Cookie" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -13,22 +13,25 @@
     String movieIdStr = request.getParameter("movieId");
     String bpage = request.getParameter("page");
 
-    boolean isReplyToComment = (numStr != null); // 댓글인지 리뷰인지 구분
+    boolean isReplyToComment = (numStr != null);
     String contCookieName = isReplyToComment ? "cont_reply" : "cont_review";
     String ratingCookieName = isReplyToComment ? "rating_reply" : "rating_review";
 
-    ReviewDto review = null;
-    ReviewManager reviewManager = new ReviewManager();
+    ReviewDto review = new ReviewDto();
+    pack.review.ReviewDao reviewDao = new pack.review.ReviewDao();
 
     if (isReplyToComment) {
-        int num = Integer.parseInt(numStr);
-        review = reviewManager.getReplyData(num);
+        int parentNum = Integer.parseInt(numStr);
+        ReviewDto parent = reviewDao.getReplyData(parentNum);
+
+        review.setMovieId(parent.getMovieId());
+        review.setOnum(parent.getOnum());
+        review.setNested(Math.min(2, parent.getNested() + 1));
     } else if (movieIdStr != null) {
         int movieId = Integer.parseInt(movieIdStr);
-        review = new ReviewDto();
         review.setMovieId(movieId);
-        review.setNested(0);
         review.setOnum(0);
+        review.setNested(1);
     } else {
         response.sendRedirect("movielist.jsp");
         return;
@@ -38,10 +41,9 @@
     request.setAttribute("bpage", bpage);
 
     if (session.getAttribute("user_id") == null) {
-        session.setAttribute("user_id", "testuser");  //
-        session.setAttribute("nickname", "빠른강아지59"); // 또는 원하는 닉네임
+        session.setAttribute("user_id", "testuser");
+        session.setAttribute("nickname", "빠른강아지59");
     }
-
 
     CookieManager cm = CookieManager.getInstance();
     Cookie[] cookies = request.getCookies();
@@ -50,21 +52,13 @@
     if (cookies != null) {
         for (Cookie c : cookies) {
             try {
-                switch (c.getName()) {
-                    case "cont_reply":
-                    case "cont_review":
-                        if (c.getName().equals(contCookieName)) {
-                            ckCont = cm.readCookie(c);
-                        }
-                        break;
-                    case "rating_reply":
-                    case "rating_review":
-                        if (c.getName().equals(ratingCookieName)) {
-                            ckRating = cm.readCookie(c);
-                        }
-                        break;
+                if (c.getName().equals(contCookieName)) {
+                    ckCont = cm.readDecryptCookie(c);
                 }
-            } catch (Exception e) {}
+                if (c.getName().equals(ratingCookieName)) {
+                    ckRating = cm.readDecryptCookie(c);
+                }
+            } catch (Exception ignored) {}
         }
     }
 %>
@@ -83,7 +77,7 @@
     <script>
         function check() {
             const frm = document.forms["frm"];
-            if (frm.cont.value === "") {
+            if (frm.cont.value.trim() === "") {
                 alert("내용을 입력하세요");
                 frm.cont.focus();
                 return;
@@ -96,7 +90,7 @@
         }
 
         function saveToCookie(name, value) {
-            const isReply = <%= isReplyToComment ? "true" : "false" %>;
+            const isReply = <%= isReplyToComment %>;
             const cookieName = name + (isReply ? "_reply" : "_review");
             fetch("../review/cookie_save.jsp?name=" + encodeURIComponent(cookieName) + "&value=" + encodeURIComponent(value));
         }
@@ -109,7 +103,6 @@
                 star.addEventListener("click", () => {
                     const rating = idx + 1;
                     ratingInput.value = rating;
-
                     stars.forEach((s, i) => {
                         s.classList.toggle("selected", i < rating);
                         s.textContent = i < rating ? "★" : "☆";
@@ -127,14 +120,10 @@
                 });
             }
 
-            ["cont"].forEach(field => {
-                const el = document.forms["frm"][field];
-                if (el) {
-                    el.addEventListener("input", () => {
-                        saveToCookie(field, el.value);
-                    });
-                }
-            });
+            const contEl = document.forms["frm"]["cont"];
+            if (contEl) {
+                contEl.addEventListener("input", () => saveToCookie("cont", contEl.value));
+            }
         });
     </script>
 </head>
@@ -160,7 +149,7 @@
             <td><textarea name="cont" rows="10" style="width:100%"><%= ckCont %></textarea></td>
         </tr>
 
-        <c:if test="${review.nested == 0}">
+        <c:if test="${review.nested == 1}">
             <tr>
                 <td align="center">별점</td>
                 <td>

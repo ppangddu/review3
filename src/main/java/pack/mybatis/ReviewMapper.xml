@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pack.review.ReviewMapper">
+
+    <!-- 전체 리뷰 목록 (별명 매핑 필수) -->
+    <select id="getReviewsByMovieId" parameterType="int" resultType="pack.review.ReviewDto">
+        SELECT 
+            r.num,
+            r.movie_id AS movieId,
+            r.user_id AS userId,
+            r.cdate,
+            r.onum,
+            r.nested,
+            r.rating,
+            r.like_count AS likeCount,
+            r.cont,
+            u.nickname
+        FROM review r
+        JOIN member u ON r.user_id = u.id
+        WHERE r.movie_id = #{movieId}
+        ORDER BY r.onum DESC, r.nested ASC, r.num ASC
+    </select>
+
+    <!-- 특정 리뷰 정보 (답글용) -->
+    <select id="getReviewByNum" parameterType="int" resultType="pack.review.ReviewDto">
+        SELECT 
+            movie_id AS movieId,
+            onum,
+            nested,
+            user_id AS userId
+        FROM review
+        WHERE num = #{num}
+    </select>
+
+    <!-- 리뷰 저장 -->
+    <insert id="insertReview" parameterType="pack.review.ReviewBean" useGeneratedKeys="true" keyProperty="num">
+        INSERT INTO review (movie_id, user_id, cdate, onum, nested, rating, like_count, cont)
+        VALUES (#{movieId}, #{userId}, NOW(), #{onum}, #{nested}, #{rating}, 0, #{cont})
+    </insert>
+
+    <!-- onum 업데이트 (대댓글 삽입 시) -->
+    <update id="updateOnum" parameterType="int">
+        UPDATE review SET onum = onum + 1 WHERE onum >= #{onum}
+    </update>
+
+    <!-- onum을 num으로 갱신 -->
+    <update id="updateReviewOnum">
+        UPDATE review SET onum = #{onum} WHERE num = #{num}
+    </update>
+
+    <!-- 좋아요 증가 -->
+    <update id="increaseLikeCount" parameterType="int">
+        UPDATE review SET like_count = like_count + 1 WHERE num = #{num}
+    </update>
+
+    <!-- 좋아요 감소 -->
+    <update id="decreaseLikeCount" parameterType="int">
+        UPDATE review SET like_count = like_count - 1 WHERE num = #{num} AND like_count > 0
+    </update>
+
+    <!-- 좋아요 수 조회 -->
+    <select id="getLikeCount" parameterType="int" resultType="int">
+        SELECT like_count FROM review WHERE num = #{num}
+    </select>
+
+    <!-- 평균 별점 조회 -->
+    <select id="getAverageRating" parameterType="int" resultType="double">
+        SELECT AVG(rating) FROM review
+        WHERE movie_id = #{movieId} AND nested = 1 AND rating > 0
+    </select>
+
+    <!-- 댓글 + 대댓글 삭제 -->
+    <delete id="deleteCascade" parameterType="map">
+        DELETE FROM review WHERE onum = #{onum} AND nested >= #{nested}
+    </delete>
+
+    <!-- 단일 댓글 삭제 -->
+    <delete id="deleteByNum" parameterType="int">
+        DELETE FROM review WHERE num = #{num}
+    </delete>
+
+</mapper>
