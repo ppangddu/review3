@@ -30,33 +30,33 @@ public class ReviewDao {
         }
     }
 
-    public void updateOnum(int onum) {
+    public void updateGnum(int gnum) {
         try (SqlSession sqlSession = factory.openSession()) {
-            sqlSession.update("pack.review.ReviewMapper.updateOnum", onum);
+            sqlSession.update("pack.review.ReviewMapper.updateGnum", gnum);
             sqlSession.commit();
         }
     }
 
-    public void updateReviewOnum(int num, int onum) {
+    public void updateReviewGnum(int num, int gnum) {
         try (SqlSession sqlSession = factory.openSession()) {
             HashMap<String, Object> map = new HashMap<>();
             map.put("num", num);
-            map.put("onum", onum);
-            sqlSession.update("pack.review.ReviewMapper.updateReviewOnum", map);
+            map.put("gnum", gnum);
+            sqlSession.update("pack.review.ReviewMapper.updateReviewGnum", map);
             sqlSession.commit();
         }
     }
 
     public void increaseLikeCount(int num) {
         try (SqlSession sqlSession = factory.openSession()) {
-            sqlSession.update("pack.review.ReviewMapper.increaseLike", num);
+            sqlSession.update("pack.review.ReviewMapper.increaseLikeCount", num);
             sqlSession.commit();
         }
     }
 
     public void decreaseLikeCount(int num) {
         try (SqlSession sqlSession = factory.openSession()) {
-            sqlSession.update("pack.review.ReviewMapper.decreaseLike", num);
+            sqlSession.update("pack.review.ReviewMapper.decreaseLikeCount", num);
             sqlSession.commit();
         }
     }
@@ -68,10 +68,10 @@ public class ReviewDao {
         }
     }
 
-    public void deleteCascade(int onum, int nested) {
+    public void deleteCascade(int gnum, int nested) {
         try (SqlSession sqlSession = factory.openSession()) {
             HashMap<String, Object> map = new HashMap<>();
-            map.put("onum", onum);
+            map.put("gnum", gnum);
             map.put("nested", nested);
             sqlSession.delete("pack.review.ReviewMapper.deleteCascade", map);
             sqlSession.commit();
@@ -82,6 +82,13 @@ public class ReviewDao {
         try (SqlSession sqlSession = factory.openSession()) {
             sqlSession.delete("pack.review.ReviewMapper.deleteByNum", num);
             sqlSession.commit();
+        }
+    }
+    
+    public int getLikeCount(int num) {
+        try (SqlSession sqlSession = factory.openSession()) {
+            Integer count = sqlSession.selectOne("pack.review.ReviewMapper.getLikeCount", num);
+            return count != null ? count : 0;
         }
     }
 }

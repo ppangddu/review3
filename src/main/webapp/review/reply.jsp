@@ -1,10 +1,11 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="pack.review.ReviewDto" %>
-<%@ page import="pack.review.ReviewDao" %>
-<%@ page import="pack.cookie.CookieManager" %>
-<%@ page import="jakarta.servlet.http.Cookie" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ page import="pack.review.ReviewDto"%>
+<%@ page import="pack.review.ReviewDao"%>
+<%@ page import="pack.cookie.CookieManager"%>
+<%@ page import="jakarta.servlet.http.Cookie"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 
 <%
     request.setCharacterEncoding("UTF-8");
@@ -23,14 +24,13 @@
     if (isReplyToComment) {
         int parentNum = Integer.parseInt(numStr);
         ReviewDto parent = reviewDao.getReplyData(parentNum);
-
         review.setMovieId(parent.getMovieId());
-        review.setOnum(parent.getOnum());
+        review.setGnum(parent.getGnum());
         review.setNested(Math.min(2, parent.getNested() + 1));
     } else if (movieIdStr != null) {
         int movieId = Integer.parseInt(movieIdStr);
         review.setMovieId(movieId);
-        review.setOnum(0);
+        review.setGnum(0);
         review.setNested(1);
     } else {
         response.sendRedirect("movielist.jsp");
@@ -58,7 +58,9 @@
                 if (c.getName().equals(ratingCookieName)) {
                     ckRating = cm.readDecryptCookie(c);
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            	
+            }
         }
     }
 %>
@@ -66,15 +68,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" type="text/css" href="../css/board.css">
-    <title>댓글 쓰기</title>
-    <style>
-        .star { font-size: 24px; cursor: pointer; color: lightgray; transition: color 0.2s; }
-        .star.selected { color: gold; }
-        .star:hover { color: orange; }
-    </style>
-    <script>
+<meta charset="UTF-8">
+<title>댓글 쓰기</title>
+<script>
         function check() {
             const frm = document.forms["frm"];
             if (frm.cont.value.trim() === "") {
@@ -104,7 +100,6 @@
                     const rating = idx + 1;
                     ratingInput.value = rating;
                     stars.forEach((s, i) => {
-                        s.classList.toggle("selected", i < rating);
                         s.textContent = i < rating ? "★" : "☆";
                     });
                     saveToCookie("rating", rating);
@@ -115,7 +110,6 @@
             if (!isNaN(initialRating) && initialRating > 0) {
                 ratingInput.value = initialRating;
                 stars.forEach((star, i) => {
-                    star.classList.toggle("selected", i < initialRating);
                     star.textContent = i < initialRating ? "★" : "☆";
                 });
             }
@@ -128,48 +122,51 @@
     </script>
 </head>
 <body>
-<form name="frm" method="post" action="replysave.jsp">
-    <c:if test="${not empty param.num}">
-        <input type="hidden" name="num" value="${param.num}">
-    </c:if>
-    <input type="hidden" name="page" value="${bpage}">
-    <input type="hidden" name="onum" value="${review.onum}">
-    <input type="hidden" name="nested" value="${review.nested}">
-    <input type="hidden" name="user_id" value="${sessionScope.user_id}">
-    <input type="hidden" name="movieId" value="${review.movieId}">
 
-    <table border="1">
-        <tr><td colspan="2"><h2>*** 댓글 쓰기 ***</h2></td></tr>
-        <tr>
-            <td align="center">작성자</td>
-            <td>${sessionScope.nickname}</td>
-        </tr>
-        <tr>
-            <td align="center">내 용</td>
-            <td><textarea name="cont" rows="10" style="width:100%"><%= ckCont %></textarea></td>
-        </tr>
+	<form name="frm" method="post" action="replysave.jsp">
+		<c:if test="${not empty param.num}">
+			<input type="hidden" name="num" value="${param.num}">
+		</c:if>
+		<input type="hidden" name="page" value="${bpage}"> <input
+			type="hidden" name="gnum" value="${review.gnum}"> <input
+			type="hidden" name="nested" value="${review.nested}"> <input
+			type="hidden" name="user_id" value="${sessionScope.user_id}">
+		<input type="hidden" name="movieId" value="${review.movieId}">
 
-        <c:if test="${review.nested == 1}">
-            <tr>
-                <td align="center">별점</td>
-                <td>
-                    <div id="star-rating">
-                        <input type="hidden" name="rating" id="rating" value="0">
-                        <c:forEach begin="1" end="5" var="i">
-                            <span class="star" data-value="${i}">☆</span>
-                        </c:forEach>
-                    </div>
-                </td>
-            </tr>
-        </c:if>
+		<table border="1">
+			<tr>
+				<td colspan="2"><h2>*** 댓글 쓰기 ***</h2></td>
+			</tr>
+			<tr>
+				<td>작성자</td>
+				<td>${sessionScope.nickname}</td>
+			</tr>
+			<tr>
+				<td>내용</td>
+				<td><textarea name="cont" rows="10" style="width: 100%"><%= ckCont %></textarea></td>
+			</tr>
 
-        <tr>
-            <td colspan="2" align="center" height="30">
-                <input type="button" value="작  성" onClick="check()">&nbsp;
-                <input type="button" value="작성 취소" onClick="history.back()">
-            </td>
-        </tr>
-    </table>
-</form>
+			<c:if test="${review.nested == 1}">
+				<tr>
+					<td>별점</td>
+					<td>
+						<div id="star-rating">
+							<input type="hidden" name="rating" id="rating" value="0">
+							<c:forEach begin="1" end="5" var="i">
+								<span class="star" data-value="${i}">☆</span>
+							</c:forEach>
+						</div>
+					</td>
+				</tr>
+			</c:if>
+
+			<tr>
+				<td colspan="2" align="center"><input type="button" value="작 성"
+					onclick="check()"> &nbsp; <input type="button"
+					value="작성 취소" onclick="history.back()"></td>
+			</tr>
+		</table>
+	</form>
+
 </body>
 </html>

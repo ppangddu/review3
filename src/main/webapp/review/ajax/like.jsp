@@ -1,4 +1,4 @@
-<%@ page import="pack.review.ReviewManager" %>
+<%@ page import="pack.review.ReviewDao" %>
 <%@ page language="java" contentType="text/plain; charset=UTF-8" pageEncoding="UTF-8"%>
 <%
     String numStr = request.getParameter("num");
@@ -13,21 +13,19 @@
         int num = Integer.parseInt(numStr);
         String likeKey = "liked_" + num;
 
-        ReviewManager manager = new ReviewManager();
+        ReviewDao reviewDao = new ReviewDao();
         Boolean alreadyLiked = (Boolean) session.getAttribute(likeKey);
-        int newCount = 0;
+        int newCount;
 
         if (alreadyLiked != null && alreadyLiked) {
-            // 이미 눌렀으면 취소
-            manager.decreaseLikeCount(num);
+            reviewDao.decreaseLikeCount(num);
             session.removeAttribute(likeKey);
-            newCount = manager.getLikeCount(num);
+            newCount = reviewDao.getLikeCount(num);  // 좋아요 수 다시 조회
             out.print("unliked:" + newCount);
         } else {
-            // 처음 누르면 증가
-            manager.increaseLikeCount(num);
+            reviewDao.increaseLikeCount(num);
             session.setAttribute(likeKey, true);
-            newCount = manager.getLikeCount(num);
+            newCount = reviewDao.getLikeCount(num);  // 좋아요 수 다시 조회
             out.print("liked:" + newCount);
         }
     } else {

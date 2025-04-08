@@ -32,7 +32,7 @@
     }
 
     if (target.getNested() == 1) {
-        reviewDao.deleteCascade(target.getOnum(), target.getNested());
+        reviewDao.deleteCascade(target.getGnum(), target.getNested());
     } else {
         reviewDao.deleteByNum(num);
     }

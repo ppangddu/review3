@@ -5,62 +5,76 @@
 
 <mapper namespace="pack.movie.MovieMapper">
 
-  <!-- 페이징 + 검색 포함한 전체 조회 -->
-  <select id="getPagedMovies" resultType="pack.movie.MovieDto" parameterType="map">
-    SELECT * FROM movie
-    <where>
-      <if test="searchWord != null and searchWord != ''">
-        title LIKE CONCAT('%', #{searchWord}, '%')
-      </if>
-    </where>
-    ORDER BY id DESC
-    LIMIT #{start}, #{limit}
-  </select>
+	<!-- 페이징 + 검색 포함한 전체 조회 -->
+	<select id="getPagedMovies" resultType="pack.movie.MovieDto"
+		parameterType="map">
+		SELECT
+		id,
+		title,
+		genre,
+		description,
+		image_url AS imageUrl,
+		release_date AS releaseDate,
+		actor_name AS actorName
+		FROM movie
+		<where>
+			<if test="searchWord != null and searchWord != ''">
+				title LIKE CONCAT('%', #{searchWord}, '%')
+			</if>
+		</where>
+		ORDER BY id DESC
+		LIMIT #{start}, #{limit}
+	</select>
 
-  <!-- 총 레코드 수 (검색 포함) -->
-  <select id="countMovies" resultType="int" parameterType="string">
-    SELECT COUNT(*) FROM movie
-    <where>
-      <if test="searchWord != null and searchWord != ''">
-        title LIKE CONCAT('%', #{searchWord}, '%')
-      </if>
-    </where>
-  </select>
 
-  <!-- 영화 등록 -->
-  <insert id="insertMovie" parameterType="pack.movie.MovieBean">
-    INSERT INTO movie (title, genre, description, image_url, release_date, actor_name)
-    VALUES (#{title}, #{genre}, #{description}, #{imageUrl}, #{releaseDate}, #{actorName})
-  </insert>
+	<!-- 총 레코드 수 (검색 포함) -->
+	<select id="countMovies" resultType="int" parameterType="string">
+		SELECT COUNT(*) FROM movie
+		<where>
+			<if test="searchWord != null and searchWord != ''">
+				title LIKE CONCAT('%', #{searchWord}, '%')
+			</if>
+		</where>
+	</select>
 
-  <!-- 영화 수정 -->
-  <update id="updateMovie" parameterType="pack.movie.MovieDto">
-    UPDATE movie
-    SET title = #{title}, genre = #{genre}, actor_name = #{actorName},
-        description = #{description}, image_url = #{imageUrl}, release_date = #{releaseDate}
-    WHERE id = #{id}
-  </update>
+	<!-- 영화 등록 -->
+	<insert id="insertMovie" parameterType="pack.movie.MovieBean">
+		INSERT INTO movie (title, genre, description, image_url, release_date,
+		actor_name)
+		VALUES (#{title}, #{genre}, #{description}, #{imageUrl}, #{releaseDate},
+		#{actorName})
+	</insert>
 
-  <delete id="deleteReviewsByMovieId" parameterType="int">
-    DELETE FROM review WHERE movie_id = #{id}
-  </delete>
+	<!-- 영화 수정 -->
+	<update id="updateMovie" parameterType="pack.movie.MovieDto">
+		UPDATE movie
+		SET title = #{title}, genre = #{genre}, actor_name = #{actorName},
+		description = #{description}, image_url = #{imageUrl}, release_date =
+		#{releaseDate}
+		WHERE id = #{id}
+	</update>
 
-  <delete id="deleteMovie" parameterType="int">
-    DELETE FROM movie WHERE id = #{id}
-  </delete>
+	<delete id="deleteReviewsByMovieId" parameterType="int">
+		DELETE FROM review WHERE movie_id = #{id}
+	</delete>
 
-  <!-- 단일 영화 조회 -->
-  <select id="getMovieById" parameterType="int" resultType="pack.movie.MovieDto">
-    SELECT id,
-           title,
-           genre,
-           description,
-           image_url AS imageUrl,
-           release_date AS releaseDate,
-           actor_name AS actorName
-    FROM movie
-    WHERE id = #{id}
-</select>
+	<delete id="deleteMovie" parameterType="int">
+		DELETE FROM movie WHERE id = #{id}
+	</delete>
+
+	<!-- 단일 영화 조회 -->
+	<select id="getMovieById" parameterType="int"
+		resultType="pack.movie.MovieDto">
+		SELECT id,
+		title,
+		genre,
+		description,
+		image_url AS imageUrl,
+		release_date AS releaseDate,
+		actor_name AS actorName
+		FROM movie
+		WHERE id = #{id}
+	</select>
 
 
 </mapper>
